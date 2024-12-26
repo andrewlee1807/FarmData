@@ -31,7 +31,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     # Replace this with your actual data loading method
-    path = "final_data.csv"
+    path = "app/final_data.csv"
     data = pd.read_csv(path)
     # Convert Date to datetime
     data['Date'] = pd.to_datetime(data['Date'])

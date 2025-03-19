@@ -4,7 +4,6 @@ import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
 import os
-import hydralit_components as hc
 
 time_format = "%m/%d/%Y"
 
@@ -119,27 +118,29 @@ data = load_data()
 # Title
 st.title("🍓 Strawberry Dashboard")
 
-# Define navigation options - each with an icon and label
-nav_options = [
-    # {'icon': "far fa-chart-bar", 'label': "View Data"},
-    {'icon': "fas fa-plus-circle", 'label': "Insert Data"}
-]
-# Create the navigation bar with hydralit_components
-selected_nav = hc.nav_bar(
-    menu_definition=nav_options,
-    override_theme={
-        'txc_inactive': '#FFFFFF',
-        'menu_background': '#597FC0',  # Strawberry red
-        'txc_active': '#FFFFFF',
-        'option_active': '#F8312F'
-    },
-    home_name='View Data',  # Default selected option
-    sticky_nav=True,  # Sticky navigation
-    hide_streamlit_markers=True,
-    sticky_mode='pinned'  # Always visible
-)
+# # Define navigation options - each with an icon and label
+# nav_options = [
+#     # {'icon': "far fa-chart-bar", 'label': "View Data"},
+#     {'icon': "fas fa-plus-circle", 'label': "Insert Data"}
+# ]
+# # Create the navigation bar with hydralit_components
+# selected_nav = hc.nav_bar(
+#     menu_definition=nav_options,
+#     override_theme={
+#         'txc_inactive': '#FFFFFF',
+#         'menu_background': '#597FC0',  # Strawberry red
+#         'txc_active': '#FFFFFF',
+#         'option_active': '#F8312F'
+#     },
+#     home_name='View Data',  # Default selected option
+#     sticky_nav=True,  # Sticky navigation
+#     hide_streamlit_markers=True,
+#     sticky_mode='pinned'  # Always visible
+# )
+# app_mode = selected_nav
 
-app_mode = selected_nav
+# Streamlit tabs:
+view_tab, insert_tab = st.tabs(["📊 View Data", "➕ Insert Data"])
 
 # Sidebar filters
 # st.sidebar.header("Dashboard Mode")
@@ -151,7 +152,8 @@ app_mode = selected_nav
 # )
 
 # Sidebar filters for View Data mode
-if app_mode == "View Data":
+# if app_mode == "View Data":
+with view_tab:
     st.sidebar.header("Search Filters")
 
     # 1. Product Name selector
@@ -272,7 +274,8 @@ if app_mode == "View Data":
     )
 
 # Insert Data Mode
-else:
+# else:
+with insert_tab:
     st.subheader("Insert New Strawberry Data")
 
     # Create form for data entry

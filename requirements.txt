@@ -2,4 +2,4 @@ streamlit
 pandas
 numpy
 plotly
-hydralit_components
+hydralit-components

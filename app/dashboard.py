@@ -142,10 +142,10 @@ with col2:
     # Update the session state based on selection
     if selected_lang == "English" and st.session_state.language != "en":
         st.session_state.language = "en"
-        st._rerun()
+        st.rerun()
     elif selected_lang == "한국어" and st.session_state.language != "ko":
         st.session_state.language = "ko"
-        st._rerun()
+        st.rerun()
 
 # Title
 st.title(get_text("title"))

@@ -4,8 +4,7 @@ import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
 import os
-
-time_format = "%m/%d/%Y"
+from lang_config import LANG  # Import language config
 
 # Set page config
 st.set_page_config(
@@ -13,6 +12,16 @@ st.set_page_config(
     page_icon="🍓",
     layout="wide"
 )
+
+# Initialize session state for language if not already set
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
+
+# Function to get text for current language
+def get_text(key):
+    return LANG[st.session_state.language].get(key, key)
+
 
 # Add custom CSS
 st.markdown("""
@@ -26,14 +35,19 @@ st.markdown("""
         padding: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
+    .language-selector {
+        float: right;
+        margin-top: -60px;
+        position: relative;
+        z-index: 1000;
+    }
     </style>
 """, unsafe_allow_html=True)
 
+# Rest of your imports and functions
 import base64
 
 
-# Define the function
 def get_image_as_base64(image_path):
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
@@ -77,7 +91,7 @@ class CsvDAO:
     def load_data(self):
         if os.path.exists(self.file_path):
             data = pd.read_csv(self.file_path)
-            data['Date'] = pd.to_datetime(data['Date'], format=time_format)
+            data['Date'] = pd.to_datetime(data['Date'], format="%m/%d/%Y")
             return data
         return pd.DataFrame()
 
@@ -115,51 +129,41 @@ def load_data():
 # Load the data
 data = load_data()
 
+# Add language selector (right-aligned)
+col1, col2 = st.columns([6, 1])
+with col2:
+    selected_lang = st.selectbox(
+        "🌐",
+        options=["English", "한국어"],
+        index=0 if st.session_state.language == "en" else 1,
+        label_visibility="collapsed"
+    )
+
+    # Update the session state based on selection
+    if selected_lang == "English" and st.session_state.language != "en":
+        st.session_state.language = "en"
+        st._rerun()
+    elif selected_lang == "한국어" and st.session_state.language != "ko":
+        st.session_state.language = "ko"
+        st._rerun()
+
 # Title
-st.title("🍓 Strawberry Dashboard")
+st.title(get_text("title"))
 
-# # Define navigation options - each with an icon and label
-# nav_options = [
-#     # {'icon': "far fa-chart-bar", 'label': "View Data"},
-#     {'icon': "fas fa-plus-circle", 'label': "Insert Data"}
-# ]
-# # Create the navigation bar with hydralit_components
-# selected_nav = hc.nav_bar(
-#     menu_definition=nav_options,
-#     override_theme={
-#         'txc_inactive': '#FFFFFF',
-#         'menu_background': '#597FC0',  # Strawberry red
-#         'txc_active': '#FFFFFF',
-#         'option_active': '#F8312F'
-#     },
-#     home_name='View Data',  # Default selected option
-#     sticky_nav=True,  # Sticky navigation
-#     hide_streamlit_markers=True,
-#     sticky_mode='pinned'  # Always visible
-# )
-# app_mode = selected_nav
+# Streamlit tabs - using translated text
+view_tab, insert_tab = st.tabs([
+    get_text("view_data_tab"),
+    get_text("insert_data_tab")
+])
 
-# Streamlit tabs:
-view_tab, insert_tab = st.tabs(["📊 View Data", "➕ Insert Data"])
-
-# Sidebar filters
-# st.sidebar.header("Dashboard Mode")
-
-# # Add mode selector in sidebar
-# app_mode = st.sidebar.radio(
-#     "Select Mode",
-#     ["View Data", "➕ Insert New Strawberry Data"]
-# )
-
-# Sidebar filters for View Data mode
-# if app_mode == "View Data":
+# View Data tab
 with view_tab:
-    st.sidebar.header("Search Filters")
+    st.sidebar.header(get_text("search_filters"))
 
     # 1. Product Name selector
     product_names = sorted(data['Product Name'].unique())
     selected_product = st.sidebar.selectbox(
-        "1. Select Product Name",
+        get_text("select_product"),
         product_names
     )
 
@@ -169,7 +173,7 @@ with view_tab:
     # 2. Date selector
     available_dates = sorted(product_data['Date'].unique())
     selected_date = st.sidebar.selectbox(
-        "2. Select Date",
+        get_text("select_date"),
         available_dates,
         format_func=lambda x: x.strftime('%Y-%m-%d')
     )
@@ -180,7 +184,7 @@ with view_tab:
     # 3. Section selector
     available_sections = sorted(date_data['Section'].unique())
     selected_section = st.sidebar.selectbox(
-        "3. Select Section",
+        get_text("select_section"),
         available_sections
     )
 
@@ -190,14 +194,11 @@ with view_tab:
     # 4. Plant selector
     available_plants = sorted(section_data['Plant'].unique())
     selected_plant = st.sidebar.selectbox(
-        "4. Select Plant",
+        get_text("select_plant"),
         available_plants
     )
 
     # Filter data by plant
-    plant_data = section_data[section_data['Plant'] == selected_plant]
-
-    # Now based on Selected Product Name, Section and Plant, we can filter the data and sort it by Date
     plant_data = data[
         (data['Product Name'] == selected_product) &
         (data['Section'] == selected_section) &
@@ -208,23 +209,21 @@ with view_tab:
     available_properties = [
         'Fruit vertical length', 'Fruit horizontal length', 'Fruit weight',
         'Hardness', 'Sweetness', 'Acidity', 'Color_L', 'Color_a', 'Color_b',
-        # 'EC', 'Humidity', 'Sun', 'pH', 'Solid_Temperature', 'Temperature',
-        # 'CO2', 'Solid_Moisture'
     ]
 
     selected_properties = st.sidebar.multiselect(
-        "5. Select Properties to Plot",
+        get_text("select_properties"),
         available_properties,
         default=['Fruit weight', 'Sweetness']
     )
 
     # Main content - View Mode
-    st.subheader("Filtered Data")
+    st.subheader(get_text("filtered_data"))
     st.dataframe(plant_data, use_container_width=True)
 
     # Time series plots for each selected property
     if selected_properties:
-        st.subheader("Time Series Analysis")
+        st.subheader(get_text("time_series"))
 
         # Get historical data for the selected plant
         historical_data = data[
@@ -256,7 +255,7 @@ with view_tab:
 
                 st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No historical data available for the selected plant.")
+            st.info(get_text("no_historical_data"))
 
     # Download button for filtered data
     st.markdown("---")
@@ -267,16 +266,15 @@ with view_tab:
 
 
     st.download_button(
-        label="Download filtered data as CSV",
+        label=get_text("download_button"),
         data=convert_df_to_csv(plant_data),
         file_name=f'strawberry_data_{selected_product}_{selected_date.strftime("%Y%m%d")}_S{selected_section}_P{selected_plant}.csv',
         mime='text/csv',
     )
 
 # Insert Data Mode
-# else:
 with insert_tab:
-    st.subheader("Insert New Strawberry Data")
+    st.subheader(get_text("insert_new"))
 
     # Create form for data entry
     with st.form("insert_data_form"):
@@ -293,33 +291,32 @@ with insert_tab:
             new_plant = st.number_input("Plant", min_value=1, step=1)
 
             # Fruit measurements
-            st.subheader("📏 Fruit Measurements")
+            st.subheader(get_text("fruit_measurements"))
             new_vertical_length = st.number_input("Fruit Vertical Length (mm)", min_value=0.0, step=0.1)
             new_horizontal_length = st.number_input("Fruit Horizontal Length (mm)", min_value=0.0, step=0.1)
             new_weight = st.number_input("Fruit Weight (g)", min_value=0.0, step=0.1)
 
         with col2:
             # Quality measures
-            st.subheader("🏆 Quality Measures")
+            st.subheader(get_text("quality_measures"))
             new_hardness = st.number_input("Hardness", min_value=0.0, step=0.1)
             new_sweetness = st.number_input("Sweetness (Brix)", min_value=0.0, step=0.1)
             new_acidity = st.number_input("Acidity", min_value=0.0, step=0.01)
 
             # Color
-            st.subheader("🎨 Color Metrics")
+            st.subheader(get_text("color_metrics"))
             new_color_l = st.number_input("Color L", min_value=0.0, step=0.1)
             new_color_a = st.number_input("Color a", min_value=0.0, step=0.1)
             new_color_b = st.number_input("Color b", min_value=0.0, step=0.1)
 
         # Submit button
-        submitted = st.form_submit_button("Insert Data")
+        submitted = st.form_submit_button(get_text("insert_btn"))
 
     # Handle form submission
     if submitted:
-        # Create a dictionary with the new data
         new_data = {
             "Product Name": new_product_name,
-            "Date": new_date.strftime(time_format),
+            "Date": new_date.strftime("%m/%d/%Y"),
             "Section": new_section,
             "Plant": new_plant,
             "Fruit vertical length": new_vertical_length,
@@ -331,14 +328,6 @@ with insert_tab:
             "Color_L": new_color_l,
             "Color_a": new_color_a,
             "Color_b": new_color_b,
-            # "EC": new_ec,
-            # "Humidity": new_humidity,
-            # "Sun": new_sun,
-            # "pH": new_ph,
-            # "Solid_Temperature": new_solid_temp,
-            # "Temperature": new_temp,
-            # "CO2": new_co2,
-            # "Solid_Moisture": new_solid_moisture
         }
 
         # Insert data
@@ -346,10 +335,9 @@ with insert_tab:
 
         if success:
             st.success(message)
-            # Clear cache to refresh data
             st.cache_data.clear()
         else:
             st.error(message)
 
 # Footer
-st.markdown("🔬 Dashboard created for Strawberry Analysis")
+st.markdown(get_text("footer"))
